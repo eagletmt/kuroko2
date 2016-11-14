@@ -46,15 +46,20 @@ module Kuroko2
         end
       end
 
+      MASKED_VALUE = '********'
+      private_constant :MASKED_VALUE
+
       def invoke(execution)
         command = execution.shell
         env     = execution.context.fetch('ENV', {})
+        masked_env = execution.context.fetch('MASKED_ENV', {})
 
-        message = "[#{@hostname}-#{@worker_id}] (uuid #{execution.uuid}) `#{command}` run with env (#{env})"
+        display_env = env.merge(masked_env.map { |k, _| [k, MASKED_VALUE] }.to_h)
+        message = "[#{@hostname}-#{@worker_id}] (uuid #{execution.uuid}) `#{command}` run with env (#{display_env})"
         execution.token.job_instance.logs.info(message)
         Kuroko2.logger.info(message)
 
-        output, status = execute_shell(command, env, execution)
+        output, status = execute_shell(command, env.merge(masked_env), execution)
         output         = truncate_and_escape(output)
 
         if status.signaled?

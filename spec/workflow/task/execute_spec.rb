@@ -123,5 +123,29 @@ module Kuroko2::Workflow::Task
         end
       end
     end
+
+    context 'with MASKED_ENV' do
+      let(:shell) { 'echo $NAME has password $PASSWORD' }
+      let(:worker) { create(:worker) }
+
+      before do
+        context['MASKED_ENV'] = {
+          'PASSWORD' => 'secret-value',
+        }
+      end
+
+      it 'sets envrionment variable but does not log the value' do
+        is_expected.to eq(:pass)
+        executor = Kuroko2::Command::Shell.new(hostname: 'execute_spec', worker: worker)
+        executor.execute
+        expect(execution).to be_success
+        expect(execution.output).to eq("alice has password secret-value\n")
+        all_messages = instance.logs.map(&:message).join("\n")
+        expect(all_messages).to include('NAME')
+        expect(all_messages).to include('alice')
+        expect(all_messages).to include('PASSWORD')
+        expect(all_messages).to_not include('secret-value')
+      end
+    end
   end
 end
