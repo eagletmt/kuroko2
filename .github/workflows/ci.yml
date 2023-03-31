@@ -12,7 +12,8 @@ jobs:
       matrix:
         ruby:
           - '2.7'
-          # TODO: Add 3.0 and 3.1 after upgrading Rails
+          - '3.0'
+          # TODO: Add 3.1 and 3.2 after upgrading Rails
     name: Run test with Ruby ${{ matrix.ruby }}
     services:
       mysql:
